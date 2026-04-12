@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +45,22 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    public function createdReunions()
+    {
+        return $this->hasMany(Reunion::class, 'created_by');
+    }
+
+    public function attendedReunions()
+    {
+        return $this->belongsToMany(Reunion::class, 'participants')
+            ->withPivot('response_status', 'presence')
+            ->withTimestamps();
     }
 }
