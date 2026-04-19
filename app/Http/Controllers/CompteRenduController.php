@@ -31,11 +31,33 @@ class CompteRenduController extends Controller
             ]
         );
 
+        // Notify participants
+        foreach ($reunion->participants as $participant) {
+            $participant->notify(new \App\Notifications\MeetingNotification([
+                'title' => 'Compte rendu publié',
+                'message' => "Le compte rendu de la réunion \"{$reunion->titre}\" est disponible.",
+                'action_url' => route('reunions.show', $reunion),
+                'type' => 'report'
+            ]));
+        }
+
         return back()->with('success', 'Compte rendu mis en ligne.');
     }
 
     public function download(CompteRendu $compteRendu)
     {
         return Storage::download($compteRendu->file_path, $compteRendu->file_name);
+    }
+
+    public function destroy(CompteRendu $compteRendu)
+    {
+        if (!Auth::user()->isAdmin()) {
+            return abort(403);
+        }
+
+        Storage::delete($compteRendu->file_path);
+        $compteRendu->delete();
+
+        return back()->with('success', 'Compte rendu supprimé.');
     }
 }

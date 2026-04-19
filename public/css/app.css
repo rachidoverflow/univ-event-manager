@@ -1,14 +1,18 @@
 :root {
-    --primary: #1a365d;
-    --primary-light: #2c5282;
+    --primary: #1e293b;
+    --primary-light: #334155;
     --accent: #d4af37;
-    --bg-dark: #0f172a;
-    --bg-card: rgba(255, 255, 255, 0.05);
-    --text-white: #f8fafc;
-    --text-muted: #94a3b8;
+    --bg-white: #f8fafc;
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
     --success: #10b981;
     --danger: #ef4444;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition: all 0.2s ease;
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --border-color: #dee2e6;
 }
 
 * {
@@ -19,23 +23,22 @@
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-white);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
 }
 
-/* Glassmorphism Sidebar */
+/* Sidebar - LOCKED TO DARK/FLAT */
 .sidebar {
     position: fixed;
     left: 0;
     top: 0;
-    width: 260px;
+    width: 250px;
     height: 100vh;
-    background: rgba(30, 41, 59, 0.7);
-    backdrop-filter: blur(12px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 2rem 1.5rem;
+    background: #2c3e50; /* Odoo dark gray side */
+    border-right: none;
+    padding: 2rem 0;
     display: flex;
     flex-direction: column;
     z-index: 100;
@@ -45,48 +48,66 @@ body {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 2.5rem;
+    padding: 0 1.5rem;
+}
+
+.logo i {
     color: var(--accent);
-    margin-bottom: 3rem;
+}
+
+.sidebar-section-title {
+    font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .nav-links {
     list-style: none;
+    margin-bottom: 1.5rem;
 }
 
 .nav-item {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1px;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 0.8rem 1rem;
-    color: var(--text-muted);
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
-    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 400;
     transition: var(--transition);
 }
 
-.nav-link:hover, .nav-link.active {
-    background: var(--bg-card);
-    color: var(--text-white);
-    transform: translateX(5px);
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .nav-link.active {
-    color: var(--accent);
-    border-left: 3px solid var(--accent);
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
 }
 
-/* Main Content */
+.nav-link i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Main Content Area */
 .main-content {
-    margin-left: 260px;
-    padding: 2rem 3rem;
+    margin-left: 250px;
+    padding: 1.5rem 2.5rem;
     min-height: 100vh;
 }
 
@@ -94,182 +115,194 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+header h1 {
+    font-size: 1.75rem;
+    font-weight: 400; /* Odoo fonts are often thinner/cleaner */
+    color: var(--text-main);
 }
 
 .user-profile {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    background: var(--bg-card);
-    padding: 0.5rem 1rem;
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0.75rem;
+    background: transparent;
+    padding: 0.4rem;
 }
 
-/* Cards & Stats */
+/* Odoo Cards - Flat, Small Radius, Subtle Border */
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+/* Stats */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
 .stat-card {
     background: var(--bg-card);
-    padding: 1.5rem;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.25rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
     transition: var(--transition);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
     border-color: var(--accent);
 }
 
 .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--primary);
 }
 
 .stat-label {
     color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
 }
 
-/* Tables & Lists */
-.card {
-    background: var(--bg-card);
-    border-radius: 20px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
+/* Tables */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
 }
 
 th {
     text-align: left;
-    color: var(--text-muted);
-    font-weight: 500;
-    padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
 }
 
 td {
-    padding: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 0.9rem;
 }
 
 tr:hover td {
-    background: rgba(255, 255, 255, 0.02);
+    background: #f1f3f5;
 }
 
-/* Buttons */
+/* Buttons - Odoo Style (Sharp, no shadow) */
 .btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 10px;
-    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
     transition: var(--transition);
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.85rem;
 }
 
 .btn-primary {
     background: var(--accent);
-    color: var(--bg-dark);
+    color: #000;
+    border-color: var(--accent);
 }
 
 .btn-primary:hover {
-    filter: brightness(1.2);
-    transform: scale(1.02);
+    background: #c4a02e;
 }
 
 .btn-outline {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
+    background: white;
+    border: 1px solid #ced4da;
+    color: #495057;
 }
 
 .btn-outline:hover {
-    background: var(--accent);
-    color: var(--bg-dark);
+    background: #f8f9fa;
+    border-color: #adb5bd;
 }
 
-/* Badge Status */
+/* Badge Status - Rectangular */
 .badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 50px;
-    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 0.7rem;
     font-weight: 600;
+    text-transform: uppercase;
 }
 
-.badge-planifiee { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-.badge-en_cours { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.badge-terminee { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+.badge-planifiee { background: #e7f5ff; color: #1c7ed6; }
+.badge-en_cours { background: #ebfbee; color: #2b8a3e; }
+.badge-terminee { background: #f1f3f5; color: #495057; }
 
-/* Micro-animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade {
-    animation: fadeIn 0.6s ease-out forwards;
-}
-
-/* Forms */
+/* Forms - Square */
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 label {
     display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #495057;
 }
 
 input, select, textarea {
     width: 100%;
-    padding: 0.8rem 1rem;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    color: white;
-    outline: none;
-    transition: var(--transition);
+    padding: 0.6rem 0.75rem;
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 input:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+    outline: none;
+    border-color: #a5a5a5;
+    background-color: #fff;
 }
 
-/* Login Page specifically */
-.login-container {
-    height: 100vh;
+/* Action Buttons */
+.action-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 2px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at top right, #1e293b, #0f172a);
+    color: var(--text-muted);
+    cursor: pointer;
 }
 
-.login-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    padding: 3rem;
-    border-radius: 30px;
-    width: 100%;
-    max-width: 450px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+.action-btn:hover {
+    background: var(--accent);
+    color: #000;
+}
+
+.member-card, .participant-card {
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border-color) !important;
 }

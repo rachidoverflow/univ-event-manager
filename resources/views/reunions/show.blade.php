@@ -25,6 +25,23 @@
                 </span>
             </div>
 
+            <div style="display: flex; gap: 0.8rem; margin-bottom: 1.5rem; justify-content: flex-end;">
+                @if(auth()->user()->role === 'responsable')
+                    <a href="{{ route('reunions.decisions.edit', $reunion) }}" class="btn btn-outline" style="border-color: var(--success); color: var(--success);">
+                        <i data-lucide="check-square"></i> Saisir les décisions
+                    </a>
+                    <a href="{{ route('reunions.pv.export', $reunion) }}" class="btn btn-primary" target="_blank">
+                        <i data-lucide="printer"></i> Générer le PV
+                    </a>
+                @endif
+
+                @if(auth()->user()->isResponsable())
+                    <a href="{{ route('reunions.edit', $reunion) }}" class="btn btn-outline">
+                        <i data-lucide="edit-3"></i> Modifier
+                    </a>
+                @endif
+            </div>
+
             @if(!auth()->user()->isAdmin())
             <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
                 <p>Votre statut : <strong>
@@ -87,6 +104,12 @@
                     <div style="flex: 1;">
                         <h4 style="margin-bottom: 0.25rem;">{{ $item->titre }}</h4>
                         <p style="color: var(--text-muted); font-size: 0.9rem;">{{ $item->description }}</p>
+                        @if($item->decision)
+                        <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border-left: 3px solid var(--success);">
+                            <div style="font-size: 0.75rem; font-weight: 700; color: var(--success); text-transform: uppercase; margin-bottom: 0.25rem;">Décision</div>
+                            <p style="font-size: 0.9rem; font-style: italic;">{{ $item->decision }}</p>
+                        </div>
+                        @endif
                     </div>
                     @if(auth()->user()->isAdmin())
                     <form action="{{ route('agenda.destroy', $item) }}" method="POST">
@@ -112,18 +135,58 @@
             </h3>
             
             @if(auth()->user()->isAdmin())
-            <form action="{{ route('participants.invite', $reunion) }}" method="POST" style="margin-bottom: 1.5rem;">
-                @csrf
-                <div style="display: flex; gap: 0.5rem;">
-                    <select name="user_id" required style="flex: 1;">
-                        <option value="">Inviter un membre...</option>
-                        @foreach(App\Models\User::where('role', 'participant')->get() as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="btn btn-primary" style="padding: 0.5rem;"><i data-lucide="user-plus"></i></button>
+            <div style="position: relative; margin-bottom: 2rem;">
+                <div class="form-group" style="margin-bottom: 0.5rem; position: relative;">
+                    <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-muted);"></i>
+                    <input type="text" id="participant-search" placeholder="Chercher un participant..." style="padding-left: 3rem; background: rgba(0,0,0,0.3);">
                 </div>
-            </form>
+                <div id="search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; z-index: 10; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    @foreach(App\Models\User::where('role', '!=', 'admin')->get() as $user)
+                        @if(!$reunion->participants->contains($user->id))
+                        <div class="search-item" data-id="{{ $user->id }}" data-name="{{ strtolower($user->name) }}" style="padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                            <span>{{ $user->name }}</span>
+                            <form action="{{ route('participants.invite', $reunion) }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $user->id }}">
+                                <button type="submit" style="background: var(--accent); color: var(--bg-dark); border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">Inviter +</button>
+                            </form>
+                        </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+
+            <script>
+                document.getElementById('participant-search').addEventListener('input', function() {
+                    const val = this.value.toLowerCase();
+                    const results = document.getElementById('search-results');
+                    const items = results.querySelectorAll('.search-item');
+                    let hasResults = false;
+
+                    if (val.length > 0) {
+                        results.style.display = 'block';
+                        items.forEach(item => {
+                            if (item.dataset.name.includes(val)) {
+                                item.style.display = 'flex';
+                                hasResults = true;
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                        
+                        if (!hasResults) results.style.display = 'none';
+                    } else {
+                        results.style.display = 'none';
+                    }
+                });
+
+                // Hide results when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('#participant-search') && !e.target.closest('#search-results')) {
+                        document.getElementById('search-results').style.display = 'none';
+                    }
+                });
+            </script>
             @endif
 
             <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -181,9 +244,20 @@
                         {{ $reunion->compteRendu->file_name }}
                     </div>
                 </div>
-                <a href="{{ route('reports.download', $reunion->compteRendu) }}" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                    <i data-lucide="download"></i> Télécharger
-                </a>
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <a href="{{ route('reports.download', $reunion->compteRendu) }}" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                        <i data-lucide="download"></i> Télécharger
+                    </a>
+                    @if(auth()->user()->isAdmin())
+                    <form action="{{ route('reports.destroy', $reunion->compteRendu) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce compte rendu pour le remplacer ?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-outline" style="border-color: var(--danger); color: var(--danger); padding: 0.6rem 1rem;">
+                            <i data-lucide="trash-2"></i>
+                        </button>
+                    </form>
+                    @endif
+                </div>
             </div>
             @else
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Aucun compte rendu n'a été publié pour cette réunion.</p>

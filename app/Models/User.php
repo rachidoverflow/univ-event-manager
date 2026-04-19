@@ -52,6 +52,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isResponsable()
+    {
+        return $this->role === 'responsable' || $this->role === 'admin';
+    }
+
     public function createdReunions()
     {
         return $this->hasMany(Reunion::class, 'created_by');
@@ -62,5 +67,10 @@ class User extends Authenticatable
         return $this->belongsToMany(Reunion::class, 'participants')
             ->withPivot('response_status', 'presence')
             ->withTimestamps();
+    }
+
+    public function instances()
+    {
+        return $this->belongsToMany(Instance::class, 'instance_user');
     }
 }

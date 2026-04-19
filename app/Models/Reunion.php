@@ -6,11 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Reunion extends Model
 {
-    protected $fillable = ['titre', 'date', 'lieu', 'status', 'created_by'];
+    protected $fillable = ['titre', 'date', 'lieu', 'status', 'created_by', 'instance_id', 'type', 'invitation_content'];
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function instance()
+    {
+        return $this->belongsTo(Instance::class);
     }
 
     public function agendas()

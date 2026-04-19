@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Agenda extends Model
 {
-    protected $fillable = ['reunion_id', 'titre', 'description', 'ordre'];
+    protected $fillable = [
+        'reunion_id',
+        'titre',
+        'description',
+        'decision',
+        'ordre',
+    ];
 
     public function reunion()
     {
