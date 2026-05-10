@@ -7,6 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 class Reunion extends Model
 {
     protected $fillable = ['titre', 'date', 'lieu', 'status', 'created_by', 'instance_id', 'type', 'invitation_content'];
+    
+    protected $casts = [
+        'date' => 'datetime',
+    ];
+
+    /**
+     * Get the status of the meeting.
+     * Automatically returns 'terminee' if the date has passed.
+     */
+    public function getStatusAttribute($value)
+    {
+        if ($value !== 'terminee' && $this->date && $this->date->isPast()) {
+            return 'terminee';
+        }
+        return $value;
+    }
 
     public function creator()
     {
@@ -26,8 +42,13 @@ class Reunion extends Model
     public function participants()
     {
         return $this->belongsToMany(User::class, 'participants')
-            ->withPivot('response_status', 'presence')
+            ->withPivot('response_status', 'presence', 'message')
             ->withTimestamps();
+    }
+
+    public function allParticipants()
+    {
+        return $this->hasMany(Participant::class);
     }
 
     public function compteRendu()

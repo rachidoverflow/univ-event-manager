@@ -9,13 +9,36 @@ use Illuminate\Support\Facades\Auth;
 
 class ReunionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $query = Reunion::with('creator', 'instance')->latest();
+
+        if ($request->has('filter')) {
+            if ($request->filter === 'terminee') {
+                $query->where(function($q) {
+                    $q->where('status', 'terminee')
+                      ->orWhere('date', '<', now());
+                });
+            } else {
+                $query->where('status', $request->filter);
+            }
+        }
+
         if ($user->isAdmin() || $user->isResponsable()) {
-            $reunions = Reunion::with('creator', 'instance')->latest()->get();
+            $reunions = $query->get();
         } else {
-            $reunions = $user->attendedReunions()->with('creator', 'instance')->latest()->get();
+            $reunions = $user->attendedReunions()->with('creator', 'instance')
+                ->when($request->filter, function($q) use ($request) {
+                    if ($request->filter === 'terminee') {
+                        return $q->where(function($sq) {
+                            $sq->where('status', 'terminee')
+                               ->orWhere('date', '<', now());
+                        });
+                    }
+                    return $q->where('status', $request->filter);
+                })
+                ->latest()->get();
         }
         return view('reunions.index', compact('reunions'));
     }
@@ -66,23 +89,44 @@ class ReunionController extends Controller
             }
         }
 
-        // 1. Auto-add instance members
+        // 1. Auto-add instance members (Users and Guests)
         if ($reunion->instance_id) {
+            $reunion->instance->load('members.user');
             $members = $reunion->instance->members;
             foreach ($members as $member) {
-                $reunion->participants()->syncWithoutDetaching([
-                    $member->id => ['response_status' => 'pending']
-                ]);
-                // Send invitation email
-                \Illuminate\Support\Facades\Mail::to($member->email)->send(new \App\Mail\MeetingInvitationMail($reunion, $member));
-                
-                // Send Database Notification
-                $member->notify(new \App\Notifications\MeetingNotification([
-                    'title' => 'Nouvelle invitation',
-                    'message' => "Vous êtes invité à la réunion : {$reunion->titre}",
-                    'action_url' => route('reunions.show', $reunion),
-                    'type' => 'invitation'
-                ]));
+                if ($member->user_id) {
+                    $reunion->participants()->syncWithoutDetaching([
+                        $member->user_id => ['response_status' => 'pending']
+                    ]);
+                    // Send invitation email to registered user
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($member->user->email)->send(new \App\Mail\MeetingInvitationMail($reunion, $member->user));
+                        
+                        // Send Database Notification
+                        $member->user->notify(new \App\Notifications\MeetingNotification([
+                            'title' => 'Nouvelle invitation',
+                            'message' => "Vous êtes invité à la réunion : {$reunion->titre}",
+                            'action_url' => route('reunions.show', $reunion),
+                            'type' => 'invitation'
+                        ]));
+                    } catch (\Exception $e) {
+                        // Ignore mail failures
+                    }
+                } else {
+                    // It's a guest
+                    $reunion->allParticipants()->create([
+                        'guest_name' => $member->guest_name,
+                        'guest_email' => $member->guest_email,
+                        'response_status' => 'pending'
+                    ]);
+                    // Send invitation email to guest
+                    $guest = (object)['name' => $member->guest_name, 'email' => $member->guest_email];
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($member->guest_email)->send(new \App\Mail\MeetingInvitationMail($reunion, $guest));
+                    } catch (\Exception $e) {
+                        // Ignore mail failures
+                    }
+                }
             }
         }
 
@@ -94,15 +138,19 @@ class ReunionController extends Controller
                     $user->id => ['response_status' => 'pending']
                 ]);
                 // Send invitation email
-                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\MeetingInvitationMail($reunion, $user));
+                try {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\MeetingInvitationMail($reunion, $user));
 
-                // Send Database Notification
-                $user->notify(new \App\Notifications\MeetingNotification([
-                    'title' => 'Nouvelle invitation (élargie)',
-                    'message' => "Vous avez été ajouté à la réunion : {$reunion->titre}",
-                    'action_url' => route('reunions.show', $reunion),
-                    'type' => 'invitation'
-                ]));
+                    // Send Database Notification
+                    $user->notify(new \App\Notifications\MeetingNotification([
+                        'title' => 'Nouvelle invitation (élargie)',
+                        'message' => "Vous avez été ajouté à la réunion : {$reunion->titre}",
+                        'action_url' => route('reunions.show', $reunion),
+                        'type' => 'invitation'
+                    ]));
+                } catch (\Exception $e) {
+                    // Ignore mail failures
+                }
             }
         }
 
@@ -136,7 +184,7 @@ class ReunionController extends Controller
             'titre' => 'required|string|max:200',
             'date' => 'required|date',
             'lieu' => 'nullable|string|max:200',
-            'status' => 'required|in:planifiee,en_cours,terminee',
+            'status' => 'required|in:planifiee,en_cours,terminee,reportee',
             'instance_id' => 'nullable|exists:instances,id',
             'type' => 'required|in:standard,elargie',
             'agenda' => 'nullable|array',
@@ -171,12 +219,16 @@ class ReunionController extends Controller
         if (!empty($reasons)) {
             $message = "Mise à jour de la réunion \"{$reunion->titre}\" : " . implode(', ', $reasons);
             foreach ($reunion->participants as $participant) {
-                $participant->notify(new \App\Notifications\MeetingNotification([
-                    'title' => 'Réunion mise à jour',
-                    'message' => $message,
-                    'action_url' => route('reunions.show', $reunion),
-                    'type' => 'update'
-                ]));
+                try {
+                    $participant->notify(new \App\Notifications\MeetingNotification([
+                        'title' => 'Réunion mise à jour',
+                        'message' => $message,
+                        'action_url' => route('reunions.show', $reunion),
+                        'type' => 'update'
+                    ]));
+                } catch (\Exception $e) {
+                    // Ignore mail failures
+                }
             }
         }
 
@@ -226,12 +278,16 @@ class ReunionController extends Controller
 
         // Notify cancellation FIRST
         foreach ($reunion->participants as $participant) {
-            $participant->notify(new \App\Notifications\MeetingNotification([
-                'title' => 'Réunion annulée',
-                'message' => "La réunion \"{$reunion->titre}\" prévue le {$reunion->date->format('d/m H:i')} a été annulée.",
-                'action_url' => route('reunions.index'),
-                'type' => 'cancellation'
-            ]));
+            try {
+                $participant->notify(new \App\Notifications\MeetingNotification([
+                    'title' => 'Réunion annulée',
+                    'message' => "La réunion \"{$reunion->titre}\" prévue le {$reunion->date->format('d/m H:i')} a été annulée.",
+                    'action_url' => route('reunions.index'),
+                    'type' => 'cancellation'
+                ]));
+            } catch (\Exception $e) {
+                // Ignore mail failures
+            }
         }
 
         $reunion->delete();

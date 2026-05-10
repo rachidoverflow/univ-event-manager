@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Univ-Event Manager - @yield('title', 'Faculté de Gestion')</title>
-    <meta name="description" content="Système de gestion des réunions pour la faculté.">
+    <title>{{ config('app.name') }} - @yield('title', 'Faculté de Gestion')</title>
+    <meta name="description" content="Plateforme premium de gestion des réunions et commissions universitaires.">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +23,7 @@
     <aside class="sidebar">
         <div class="logo">
             <i data-lucide="graduation-cap"></i>
-            <span>UnivEvents</span>
+            <span>{{ config('app.name') }}</span>
         </div>
         
         <nav>
@@ -49,8 +50,33 @@
                 @endif
             </ul>
 
-            <div class="sidebar-section-title" id="commissions-toggle" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding-right: 1.5rem; margin-top: 2rem;">
+            <div class="sidebar-section-title" style="margin-top: 1.5rem;">
+                Accès rapide
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item">
+                    <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                        <i data-lucide="file-text"></i> Comptes-rendus
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('reunions.index') }}?filter=terminee" class="nav-link">
+                        <i data-lucide="archive"></i> Archives
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-section-title" style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; padding-right: 1.5rem;">
                 Commissions / Instances
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('instances.index') }}" title="Gérer les commissions" style="color: var(--accent); transition: transform 0.2s;" class="hover-scale">
+                    <i data-lucide="settings" style="width: 14px;"></i>
+                </a>
+                @endif
+            </div>
+            
+            <div id="commissions-toggle" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1.5rem; color: rgba(255,255,255,0.6); font-size: 0.8rem; border-radius: 4px; margin: 0 0.5rem;">
+                <span>Explorer les commissions</span>
                 <i data-lucide="chevron-down" id="commissions-arrow" style="width: 14px; transition: transform 0.3s;"></i>
             </div>
             <ul class="nav-links" id="commissions-list" style="display: none; padding-left: 0.5rem; transition: all 0.3s ease;">
@@ -161,7 +187,7 @@
 
                 <div class="user-profile animate-fade">
                     <span>{{ auth()->user()->name }}</span>
-                    <div style="background: var(--accent); width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 0.9rem;">
+                    <div style="background: var(--accent); width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 0.9rem;">
                         {{ substr(auth()->user()->name, 0, 1) }}
                     </div>
                 </div>

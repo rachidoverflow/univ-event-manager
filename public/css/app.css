@@ -1,18 +1,19 @@
 :root {
     --primary: #1e293b;
     --primary-light: #334155;
-    --accent: #d4af37;
-    --bg-white: #f8fafc;
-    --bg-main: #f1f5f9;
+    --accent: #4f46e5; /* Indigo 600 - More readable and modern than gold */
+    --accent-hover: #4338ca;
+    --bg-white: #ffffff;
+    --bg-main: #f8fafc;
     --bg-card: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --success: #10b981;
-    --danger: #ef4444;
-    --transition: all 0.2s ease;
-    --radius-sm: 2px;
-    --radius-md: 4px;
-    --border-color: #dee2e6;
+    --text-main: #0f172a; /* Slate 900 - High contrast */
+    --text-muted: #475569; /* Slate 600 */
+    --success: #059669;
+    --danger: #dc2626;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --border-color: #e2e8f0;
 }
 
 * {
@@ -36,12 +37,29 @@ body {
     top: 0;
     width: 250px;
     height: 100vh;
-    background: #2c3e50; /* Odoo dark gray side */
+    background: #0f172a; /* Slate 900 - Matching primary-dark */
     border-right: none;
     padding: 2rem 0;
     display: flex;
     flex-direction: column;
     z-index: 100;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .logo {
@@ -95,7 +113,7 @@ body {
 
 .nav-link.active {
     background: var(--accent);
-    color: #000;
+    color: #ffffff;
     font-weight: 600;
 }
 
@@ -220,12 +238,13 @@ tr:hover td {
 
 .btn-primary {
     background: var(--accent);
-    color: #000;
+    color: #ffffff;
     border-color: var(--accent);
 }
 
 .btn-primary:hover {
-    background: #c4a02e;
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
 }
 
 .btn-outline {
@@ -251,6 +270,7 @@ tr:hover td {
 .badge-planifiee { background: #e7f5ff; color: #1c7ed6; }
 .badge-en_cours { background: #ebfbee; color: #2b8a3e; }
 .badge-terminee { background: #f1f3f5; color: #495057; }
+.badge-reportee { background: #fff4e6; color: #d9480f; }
 
 /* Forms - Square */
 .form-group {
@@ -298,11 +318,70 @@ input:focus, select:focus, textarea:focus {
 
 .action-btn:hover {
     background: var(--accent);
-    color: #000;
+    color: #ffffff;
 }
 
 .member-card, .participant-card {
     border-radius: var(--radius-sm) !important;
     box-shadow: none !important;
     border: 1px solid var(--border-color) !important;
+}
+
+.hover-scale:hover {
+    transform: scale(1.15);
+}
+
+/* Login Page Styles */
+.login-container {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+}
+
+.login-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 420px;
+    padding: 3rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.login-card .form-group label {
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.login-card input {
+    height: 48px;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    padding: 0 1rem;
+    transition: all 0.3s;
+}
+
+.login-card input:focus {
+    border-color: var(--accent);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.login-card .btn-primary {
+    height: 48px;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    margin-top: 1rem;
 }

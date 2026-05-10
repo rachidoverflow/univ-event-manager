@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class CompteRenduController extends Controller
 {
+    public function index()
+    {
+        $reports = CompteRendu::with('reunion', 'uploader')->latest()->get();
+        return view('reports.index', compact('reports'));
+    }
     public function store(Request $request, Reunion $reunion)
     {
         if (!Auth::user()->isAdmin()) {

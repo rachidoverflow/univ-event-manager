@@ -16,7 +16,7 @@
                     <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ $reunion->titre }}</h2>
                     <p style="color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
                         <i data-lucide="map-pin" style="width: 16px;"></i> {{ $reunion->lieu ?? 'Lieu non défini' }}
-                        <span style="margin: 0 1rem; color: rgba(255,255,255,0.1);">|</span>
+                        <span style="margin: 0 1rem; color: var(--border-color);">|</span>
                         <i data-lucide="calendar" style="width: 16px;"></i> {{ \Carbon\Carbon::parse($reunion->date)->format('d F Y') }}
                     </p>
                 </div>
@@ -36,6 +36,9 @@
                 @endif
 
                 @if(auth()->user()->isResponsable())
+                    <a href="{{ route('reunions.edit', $reunion) }}?action=report" class="btn btn-outline" style="border-color: #f59e0b; color: #f59e0b;">
+                        <i data-lucide="calendar-days"></i> Reporter
+                    </a>
                     <a href="{{ route('reunions.edit', $reunion) }}" class="btn btn-outline">
                         <i data-lucide="edit-3"></i> Modifier
                     </a>
@@ -43,25 +46,55 @@
             </div>
 
             @if(!auth()->user()->isAdmin())
-            <div style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-                <p>Votre statut : <strong>
-                    @php 
-                        $pivot = $reunion->participants->find(auth()->id())->pivot ?? null;
-                    @endphp
-                    {{ $pivot ? ucfirst($pivot->response_status) : 'Non invité' }}
-                </strong></p>
-                <div style="display: flex; gap: 1rem;">
-                    <form action="{{ route('participants.status', $reunion) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="status" value="accepted">
-                        <button type="submit" class="btn btn-primary" style="background: var(--success); color: white;">Accepter</button>
-                    </form>
-                    <form action="{{ route('participants.status', $reunion) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="status" value="declined">
-                        <button type="submit" class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);">Refuser</button>
-                    </form>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 2rem; margin-top: 1rem;">
+                @php 
+                    $pivot = $reunion->participants->find(auth()->id())->pivot ?? null;
+                @endphp
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="send" style="width: 18px; color: var(--accent);"></i> Votre Réponse
+                    </h4>
+                    <span class="badge badge-{{ $pivot ? $pivot->response_status : 'pending' }}" style="text-transform: uppercase;">
+                        Statut actuel : {{ $pivot ? ucfirst($pivot->response_status) : 'En attente' }}
+                    </span>
                 </div>
+
+                <form action="{{ route('participants.status', $reunion) }}" method="POST" style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                    @csrf
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <label style="flex: 1; cursor: pointer; position: relative;">
+                            <input type="radio" name="status" value="accepted" {{ ($pivot && $pivot->response_status == 'accepted') ? 'checked' : '' }} style="position: absolute; opacity: 0;" required>
+                            <div class="status-option" onclick="this.previousElementSibling.click()" style="padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; font-weight: 600; transition: all 0.2s;">
+                                <i data-lucide="check-circle" style="color: var(--success); margin-bottom: 0.5rem;"></i><br>Confirmer
+                            </div>
+                        </label>
+                        <label style="flex: 1; cursor: pointer; position: relative;">
+                            <input type="radio" name="status" value="declined" {{ ($pivot && $pivot->response_status == 'declined') ? 'checked' : '' }} style="position: absolute; opacity: 0;" required>
+                            <div class="status-option" onclick="this.previousElementSibling.click()" style="padding: 1rem; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; font-weight: 600; transition: all 0.2s;">
+                                <i data-lucide="x-circle" style="color: var(--danger); margin-bottom: 0.5rem;"></i><br>S'excuser
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <textarea name="message" placeholder="Un petit mot ou une raison d'absence... (Optionnel)" rows="2">{{ $pivot ? $pivot->message : '' }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Enregistrer ma réponse</button>
+                </form>
+
+                <style>
+                    input[type="radio"]:checked + .status-option {
+                        border-color: var(--accent) !important;
+                        background-color: rgba(79, 70, 229, 0.05);
+                        color: var(--accent);
+                    }
+                    .status-option:hover {
+                        border-color: #cbd5e1;
+                        background-color: #ffffff;
+                    }
+                </style>
             </div>
             @endif
         </div>
@@ -80,7 +113,7 @@
             </div>
 
             @if(auth()->user()->isAdmin())
-            <div id="agenda-form" style="display: none; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+            <div id="agenda-form" style="display: none; background: #f1f5f9; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid var(--border-color);">
                 <form action="{{ route('agenda.store', $reunion) }}" method="POST">
                     @csrf
                     <div class="form-group">
@@ -99,7 +132,7 @@
 
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 @forelse($reunion->agendas as $index => $item)
-                <div style="background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 1rem;">
+                <div style="background: #f8fafc; padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color); display: flex; gap: 1rem;">
                     <div style="color: var(--accent); font-weight: 800; font-size: 1.2rem;">{{ $index + 1 }}.</div>
                     <div style="flex: 1;">
                         <h4 style="margin-bottom: 0.25rem;">{{ $item->titre }}</h4>
@@ -130,15 +163,25 @@
     <div style="display: flex; flex-direction: column; gap: 2rem;">
         <!-- Participants Card -->
         <div class="card">
-            <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i data-lucide="users" style="color: var(--accent);"></i> Participants
-            </h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                    <i data-lucide="users" style="color: var(--accent);"></i> Participants
+                </h3>
+                @if(auth()->user()->isResponsable())
+                <form action="{{ route('reunions.notify-all', $reunion) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-outline" style="font-size: 0.75rem; border-color: var(--accent); color: var(--accent); padding: 0.4rem 0.8rem;" title="Envoyer un email de rappel à tous">
+                        <i data-lucide="mail" style="width: 14px;"></i> Notifier tous
+                    </button>
+                </form>
+                @endif
+            </div>
             
             @if(auth()->user()->isAdmin())
             <div style="position: relative; margin-bottom: 2rem;">
                 <div class="form-group" style="margin-bottom: 0.5rem; position: relative;">
                     <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-muted);"></i>
-                    <input type="text" id="participant-search" placeholder="Chercher un participant..." style="padding-left: 3rem; background: rgba(0,0,0,0.3);">
+                    <input type="text" id="participant-search" placeholder="Chercher un participant..." style="padding-left: 3rem; background: #f1f5f9;">
                 </div>
                 <div id="search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; z-index: 10; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
                     @foreach(App\Models\User::where('role', '!=', 'admin')->get() as $user)
@@ -148,12 +191,25 @@
                             <form action="{{ route('participants.invite', $reunion) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                <button type="submit" style="background: var(--accent); color: var(--bg-dark); border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">Inviter +</button>
+                                <button type="submit" style="background: var(--accent); color: #fff; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold;">Inviter +</button>
                             </form>
                         </div>
                         @endif
                     @endforeach
                 </div>
+            </div>
+
+            <!-- Guest Invitation Form -->
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 2rem;">
+                <h4 style="font-size: 0.8rem; margin-bottom: 0.75rem; color: var(--text-main);">Inviter un externe (non-inscrit)</h4>
+                <form action="{{ route('participants.invite', $reunion) }}" method="POST" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    @csrf
+                    <input type="text" name="guest_name" placeholder="Nom complet" required style="font-size: 0.8rem; padding: 0.4rem;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="email" name="guest_email" placeholder="Email" required style="flex: 1; font-size: 0.8rem; padding: 0.4rem;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Inviter</button>
+                    </div>
+                </form>
             </div>
 
             <script>
@@ -190,15 +246,32 @@
             @endif
 
             <div style="display: flex; flex-direction: column; gap: 1rem;">
-                @foreach($reunion->participants as $participant)
+                @foreach($reunion->allParticipants as $participant)
+                @php 
+                    $name = $participant->user_id ? $participant->user->name : $participant->guest_name;
+                    $email = $participant->user_id ? $participant->user->email : $participant->guest_email;
+                    $isGuest = !$participant->user_id;
+                @endphp
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-dark); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--accent);">
-                            {{ substr($participant->name, 0, 1) }}
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: 1px solid {{ $isGuest ? 'var(--text-muted)' : 'var(--accent)' }}; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: {{ $isGuest ? 'var(--text-muted)' : 'var(--accent)' }}; font-weight: 600;">
+                            {{ substr($name, 0, 1) }}
                         </div>
                         <div>
-                            <div>{{ $participant->name }}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">{{ ucfirst($participant->pivot->response_status) }}</div>
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                {{ $name }}
+                                @if($isGuest)
+                                    <span style="font-size: 0.6rem; background: #e2e8f0; padding: 1px 4px; border-radius: 4px; color: #475569;">EXTERNE</span>
+                                @endif
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                {{ ucfirst($participant->response_status) }}
+                                @if($participant->message)
+                                    <span title="{{ $participant->message }}" style="margin-left: 0.5rem; color: var(--accent); cursor: help;">
+                                        <i data-lucide="message-square" style="width: 10px; display: inline-block;"></i>
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     @if(auth()->user()->isAdmin())
@@ -206,22 +279,22 @@
                         <form action="{{ route('participants.presence', [$reunion, $participant]) }}" method="POST">
                             @csrf
                             <input type="hidden" name="presence" value="1">
-                            <button title="Présent" style="background: {{ $participant->pivot->presence === 1 ? 'var(--success)' : 'transparent' }}; border: 1px solid var(--success); color: {{ $participant->pivot->presence === 1 ? 'white' : 'var(--success)' }}; border-radius: 4px; padding: 2px; cursor: pointer;">
+                            <button title="Présent" style="background: {{ $participant->presence === 1 ? 'var(--success)' : 'transparent' }}; border: 1px solid var(--success); color: {{ $participant->presence === 1 ? 'white' : 'var(--success)' }}; border-radius: 4px; padding: 2px; cursor: pointer;">
                                 <i data-lucide="check" style="width: 14px;"></i>
                             </button>
                         </form>
                         <form action="{{ route('participants.presence', [$reunion, $participant]) }}" method="POST">
                             @csrf
                             <input type="hidden" name="presence" value="0">
-                            <button title="Absent" style="background: {{ $participant->pivot->presence === 0 ? 'var(--danger)' : 'transparent' }}; border: 1px solid var(--danger); color: {{ $participant->pivot->presence === 0 ? 'white' : 'var(--danger)' }}; border-radius: 4px; padding: 2px; cursor: pointer;">
+                            <button title="Absent" style="background: {{ $participant->presence === 0 ? 'var(--danger)' : 'transparent' }}; border: 1px solid var(--danger); color: {{ $participant->presence === 0 ? 'white' : 'var(--danger)' }}; border-radius: 4px; padding: 2px; cursor: pointer;">
                                 <i data-lucide="x" style="width: 14px;"></i>
                             </button>
                         </form>
                     </div>
                     @else
-                        @if($participant->pivot->presence === 1)
+                        @if($participant->presence === 1)
                             <span style="color: var(--success); font-size: 0.7rem;">Présent <i data-lucide="check" style="width: 10px;"></i></span>
-                        @elseif($participant->pivot->presence === 0)
+                        @elseif($participant->presence === 0)
                             <span style="color: var(--danger); font-size: 0.7rem;">Absent <i data-lucide="x" style="width: 10px;"></i></span>
                         @endif
                     @endif
@@ -231,13 +304,13 @@
         </div>
 
         <!-- Compte Rendu Card -->
-        <div class="card" style="background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.1);">
+        <div class="card" style="background: rgba(79, 70, 229, 0.05); border-color: rgba(79, 70, 229, 0.1);">
             <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i data-lucide="file-text" style="color: var(--accent);"></i> Compte Rendu
             </h3>
 
             @if($reunion->compteRendu)
-            <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="background: #ffffff; padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem;">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                     <i data-lucide="file" style="color: var(--accent);"></i>
                     <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">

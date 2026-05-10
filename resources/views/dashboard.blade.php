@@ -77,9 +77,9 @@
 
 @if(auth()->user()->isAdmin())
 <div style="margin-top: 3rem;" class="animate-fade">
-    <div class="card" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), transparent); border-color: rgba(212, 175, 55, 0.2);">
+    <div class="card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), transparent); border-color: rgba(79, 70, 229, 0.1);">
         <div style="display: flex; gap: 2rem; align-items: center;">
-            <div style="background: var(--accent); color: var(--bg-dark); width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <div style="background: var(--accent); color: #fff; width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                 <i data-lucide="plus"></i>
             </div>
             <div>

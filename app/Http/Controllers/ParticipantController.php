@@ -50,12 +50,16 @@ class ParticipantController extends Controller
         }
 
         // Send Welcome Notification
-        $user->notify(new \App\Notifications\MeetingNotification([
-            'title' => 'Bienvenue !',
-            'message' => "Votre compte a été créé. Vous pouvez maintenant gérer vos réunions.",
-            'action_url' => route('dashboard'),
-            'type' => 'account'
-        ]));
+        try {
+            $user->notify(new \App\Notifications\MeetingNotification([
+                'title' => 'Bienvenue !',
+                'message' => "Votre compte a été créé. Vous pouvez maintenant gérer vos réunions.",
+                'action_url' => route('dashboard'),
+                'type' => 'account'
+            ]));
+        } catch (\Exception $e) {
+            // Ignore mail failures
+        }
 
         return redirect()->route('participants.index')->with('success', 'Participant ajouté avec succès.');
     }
@@ -101,12 +105,16 @@ class ParticipantController extends Controller
         $addedInstances = array_diff($newInstanceIds, $oldInstanceIds);
         if (!empty($addedInstances)) {
             $instanceNames = \App\Models\Instance::whereIn('id', $addedInstances)->pluck('nom')->implode(', ');
-            $participant->notify(new \App\Notifications\MeetingNotification([
-                'title' => 'Nouvelle Commission',
-                'message' => "Vous avez été ajouté à : {$instanceNames}",
-                'action_url' => route('dashboard'),
-                'type' => 'assignment'
-            ]));
+            try {
+                $participant->notify(new \App\Notifications\MeetingNotification([
+                    'title' => 'Nouvelle Commission',
+                    'message' => "Vous avez été ajouté à : {$instanceNames}",
+                    'action_url' => route('dashboard'),
+                    'type' => 'assignment'
+                ]));
+            } catch (\Exception $e) {
+                // Ignore mail failures
+            }
         }
 
         return redirect()->route('participants.index')->with('success', 'Participant mis à jour.');
@@ -127,58 +135,139 @@ class ParticipantController extends Controller
         }
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'nullable|exists:users,id',
+            'guest_name' => 'nullable|string|max:255',
+            'guest_email' => 'nullable|email|max:255',
         ]);
 
-        $reunion->participants()->syncWithoutDetaching([$validated['user_id']]);
+        if ($validated['user_id']) {
+            $reunion->participants()->syncWithoutDetaching([$validated['user_id']]);
+            $participant = User::find($validated['user_id']);
+            
+            try {
+                Mail::to($participant->email)->send(new MeetingInvitationMail($reunion, $participant));
 
-        // Send Email
-        $participant = User::find($validated['user_id']);
-        Mail::to($participant->email)->send(new MeetingInvitationMail($reunion, $participant));
+                $participant->notify(new \App\Notifications\MeetingNotification([
+                    'title' => 'Nouvelle invitation',
+                    'message' => "Vous avez été invité à rejoindre la réunion : {$reunion->titre}",
+                    'action_url' => route('reunions.show', $reunion),
+                    'type' => 'invitation'
+                ]));
+            } catch (\Exception $e) {
+                // Ignore mail failures
+            }
+            
+            return back()->with('success', 'Participant invité et notifications envoyées.');
+        } 
+        
+        if ($validated['guest_name'] && $validated['guest_email']) {
+            Participant::create([
+                'reunion_id' => $reunion->id,
+                'guest_name' => $validated['guest_name'],
+                'guest_email' => $validated['guest_email'],
+                'response_status' => 'pending'
+            ]);
 
-        // Send Database Notification
-        $participant->notify(new \App\Notifications\MeetingNotification([
-            'title' => 'Nouvelle invitation',
-            'message' => "Vous avez été invité à rejoindre la réunion : {$reunion->titre}",
-            'action_url' => route('reunions.show', $reunion),
-            'type' => 'invitation'
-        ]));
+            // Create a fake object for the email
+            $guest = (object)[
+                'name' => $validated['guest_name'],
+                'email' => $validated['guest_email']
+            ];
 
-        return back()->with('success', 'Participant invité et notifications envoyées.');
+            try {
+                Mail::to($guest->email)->send(new MeetingInvitationMail($reunion, $guest));
+            } catch (\Exception $e) {
+                // Ignore mail failures
+            }
+
+            return back()->with('success', 'Invité externe ajouté et email envoyé.');
+        }
+
+        return back()->with('error', 'Veuillez sélectionner un participant ou remplir les informations de l\'invité.');
     }
 
     public function updateStatus(Request $request, Reunion $reunion)
     {
         $status = $request->status;
+        $messageText = $request->message;
+
         $reunion->participants()->updateExistingPivot(Auth::id(), [
             'response_status' => $status,
+            'message' => $messageText,
         ]);
 
         // Notify the creator
         $creator = $reunion->creator;
         if ($creator) {
-            $statusFr = $status == 'accepter' ? 'accepté' : 'décliné';
-            $creator->notify(new \App\Notifications\MeetingNotification([
-                'title' => 'Réponse à une invitation',
-                'message' => Auth::user()->name . " a {$statusFr} l'invitation pour : {$reunion->titre}",
-                'action_url' => route('reunions.show', $reunion),
-                'type' => 'response'
-            ]));
+            $statusFr = $status == 'accepted' ? 'accepté' : 'décliné';
+            $notifMessage = Auth::user()->name . " a {$statusFr} l'invitation pour : {$reunion->titre}";
+            if ($messageText) {
+                $notifMessage .= "\nMessage : \"{$messageText}\"";
+            }
+
+            try {
+                $creator->notify(new \App\Notifications\MeetingNotification([
+                    'title' => 'Réponse à une invitation',
+                    'message' => $notifMessage,
+                    'action_url' => route('reunions.show', $reunion),
+                    'type' => 'response'
+                ]));
+            } catch (\Exception $e) {
+                // Ignore mail failures
+            }
         }
 
         return back()->with('success', 'Votre réponse a été enregistrée.');
     }
 
-    public function markPresence(Request $request, Reunion $reunion, User $user)
+    public function markPresence(Request $request, Reunion $reunion, Participant $participant)
     {
         if (!Auth::user()->isAdmin()) {
             return abort(403);
         }
 
-        $reunion->participants()->updateExistingPivot($user->id, [
+        $participant->update([
             'presence' => $request->presence,
         ]);
 
         return back()->with('success', 'Présence mise à jour.');
+    }
+
+    public function notifyAll(Request $request, Reunion $reunion)
+    {
+        if (!Auth::user()->isResponsable()) {
+            return abort(403);
+        }
+
+        $participants = $reunion->allParticipants;
+
+        if ($participants->isEmpty()) {
+            return back()->with('error', 'Aucun participant à notifier.');
+        }
+
+        $data = [
+            'title' => 'Rappel de Réunion : ' . $reunion->titre,
+            'message' => "Ceci est un rappel pour la réunion prévue le " . \Carbon\Carbon::parse($reunion->date)->format('d/m/Y') . ".",
+            'action_url' => route('reunions.show', $reunion),
+            'type' => 'reminder'
+        ];
+
+        foreach ($participants as $participant) {
+            try {
+                if ($participant->user_id) {
+                    $user = User::find($participant->user_id);
+                    if ($user) {
+                        $user->notify(new \App\Notifications\MeetingNotification($data));
+                    }
+                } elseif ($participant->guest_email) {
+                    \Illuminate\Support\Facades\Notification::route('mail', $participant->guest_email)
+                        ->notify(new \App\Notifications\MeetingNotification($data));
+                }
+            } catch (\Exception $e) {
+                // Skip errors
+            }
+        }
+
+        return back()->with('success', 'Notifications envoyées à tous les participants.');
     }
 }

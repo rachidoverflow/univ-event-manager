@@ -6,24 +6,31 @@
 @section('content')
 <div class="animate-fade">
     <div class="card" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">Annuaire des Participants</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">Liste officielle des enseignants et du personnel administratif.</p>
             </div>
-            @if(auth()->user()->isAdmin())
-            <a href="{{ route('participants.create') }}" class="btn btn-primary">
-                <i data-lucide="user-plus"></i> Ajouter un membre
-            </a>
-            @endif
+            
+            <div style="display: flex; align-items: center; gap: 1rem; flex: 1; max-width: 500px;">
+                <div style="position: relative; flex: 1;">
+                    <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: var(--text-muted);"></i>
+                    <input type="text" id="participant-search" placeholder="Rechercher par nom, email ou rôle..." style="padding-left: 40px; background: #f8fafc; border-radius: 30px; height: 42px;">
+                </div>
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('participants.create') }}" class="btn btn-primary" style="height: 42px; white-space: nowrap;">
+                    <i data-lucide="user-plus"></i> Ajouter
+                </a>
+                @endif
+            </div>
         </div>
     </div>
 
     <div class="card">
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
             @foreach($participants as $participant)
-            <div style="background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: flex-start; gap: 1.25rem; position: relative;" class="participant-card">
-                <div style="width: 56px; height: 56px; border-radius: 14px; background: var(--bg-dark); border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: var(--accent);">
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: flex-start; gap: 1.25rem; position: relative;" class="participant-card">
+                <div style="width: 56px; height: 56px; border-radius: 14px; background: #ffffff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: var(--accent);">
                     {{ substr($participant->name, 0, 1) }}
                 </div>
                 <div style="flex: 1;">
@@ -44,7 +51,7 @@
                         </div>
                         @endif
                     </div>
-                    <div style="display: inline-block; padding: 0.15rem 0.6rem; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase;">
+                    <div style="display: inline-block; padding: 0.15rem 0.6rem; background: #f1f5f9; border-radius: 6px; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase;">
                         {{ ucfirst($participant->role) }}
                     </div>
                     
@@ -76,4 +83,21 @@
         color: var(--accent) !important;
     }
 </style>
+
+<script>
+    document.getElementById('participant-search').addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase();
+        const cards = document.querySelectorAll('.participant-card');
+        
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (text.includes(query)) {
+                card.style.display = 'flex';
+                card.classList.add('animate-fade');
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+</script>
 @endsection

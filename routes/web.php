@@ -23,20 +23,24 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('participants', ParticipantController::class);
 
-    Route::get('/instances/{instance}', [\App\Http\Controllers\InstanceController::class, 'show'])->name('instances.show');
-    Route::delete('/instances/{instance}/members/{user}', [\App\Http\Controllers\InstanceController::class, 'removeMember'])->name('instances.members.remove');
+    Route::resource('instances', \App\Http\Controllers\InstanceController::class);
+    Route::post('/instances/{instance}/members', [\App\Http\Controllers\InstanceController::class, 'addMember'])->name('instances.members.add');
+    Route::delete('/instances/{instance}/members/{member}', [\App\Http\Controllers\InstanceController::class, 'removeMember'])->name('instances.members.remove');
 
     Route::post('reunions/{reunion}/agenda', [AgendaController::class, 'store'])->name('agenda.store');
     Route::delete('agenda/{agenda}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
 
     Route::post('reunions/{reunion}/invite', [ParticipantController::class, 'invite'])->name('participants.invite');
     Route::post('reunions/{reunion}/status', [ParticipantController::class, 'updateStatus'])->name('participants.status');
-    Route::post('reunions/{reunion}/presence/{user}', [ParticipantController::class, 'markPresence'])->name('participants.presence');
+    Route::post('reunions/{reunion}/presence/{participant}', [ParticipantController::class, 'markPresence'])->name('participants.presence');
+    Route::post('reunions/{reunion}/notify-all', [ParticipantController::class, 'notifyAll'])->name('reunions.notify-all');
 
+    Route::get('reports', [CompteRenduController::class, 'index'])->name('reports.index');
     Route::post('reunions/{reunion}/report', [CompteRenduController::class, 'store'])->name('reports.store');
     Route::get('reports/{compteRendu}/download', [CompteRenduController::class, 'download'])->name('reports.download');
     Route::delete('reports/{compteRendu}', [CompteRenduController::class, 'destroy'])->name('reports.destroy');
 
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('api/instances/{instance}/members', [\App\Http\Controllers\InstanceController::class, 'getMembers']);
 });

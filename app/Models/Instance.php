@@ -13,7 +13,7 @@ class Instance extends Model
 
     public function members()
     {
-        return $this->belongsToMany(User::class, 'instance_user');
+        return $this->hasMany(InstanceMember::class);
     }
 
     public function reunions()

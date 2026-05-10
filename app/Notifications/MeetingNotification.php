@@ -27,7 +27,20 @@ class MeetingNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['mail', 'database'];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+                    ->subject($this->data['title'])
+                    ->greeting('Bonjour ' . ($notifiable->name ?? 'Membre') . '!')
+                    ->line($this->data['message'])
+                    ->action('Consulter la réunion', $this->data['action_url'])
+                    ->line('Merci d\'utiliser notre application de gestion de réunions !');
     }
 
     /**
