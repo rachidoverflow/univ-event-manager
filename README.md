@@ -2,47 +2,50 @@
 
 Une solution de gestion moderne, efficace et transparente pour l'organisation et le suivi des réunions académiques et administratives au sein de la Faculté Polydisciplinaire de Sidi Bennour.
 
-##  Présentation
-Développé par **Rachid ELOUIZI**, ce système permet d'automatiser le cycle de vie complet des réunions, de la planification à la publication des comptes-rendus officiels. L'interface adopte un design inspiré de l'écosystème Odoo, privilégiant la clarté technique et la densité informationnelle.
+## 🚀 Présentation
+Développé par **Rachid ELOUIZI**, ce système permet d'automatiser le cycle de vie complet des réunions, de la planification à la publication des comptes-rendus officiels. L'application adopte désormais un design **Premium & Moderne**, alliant la clarté technique d'Odoo à des finitions esthétiques contemporaines (Indigo, Glassmorphism, Animations fluides).
 
-##  Fonctionnalités Clés
+## ✨ Fonctionnalités Clés
 
-###  Gestion des Réunions
-- **Planification Avancée** : Création de réunions standards ou élargies.
-- **Ordre du Jour Dynamique** : Gestion des points de discussion avec suivi des décisions en temps réel.
-- **Invitations Automatiques** : Envoi groupé d'invitations par commission (instance) et ajout de participants extérieurs.
+### 📅 Gestion des Réunions & Planning
+- **Planification Avancée** : Création de réunions standards ou élargies avec affichage dynamique des membres de l'instance en temps réel.
+- **Système de Report** : Possibilité de reporter une réunion en un clic avec mise à jour automatique des participants.
+- **Ordre du Jour Intelligent** : Gestion dynamique des points de discussion avec numérotation automatique et suivi.
+- **Invitations Automatiques** : Envoi groupé d'invitations et gestion des réponses (Acceptation/Refus) avec messages personnalisés.
 
-###  Gestion des Membres & Instances
-- **Annuaire Centralisé** : CRUD complet des professeurs et fonctionnaires avec recherche instantanée.
-- **Commissions (Instances)** : Organisation des membres par commissions spécialisées avec gestion des responsables.
-- **Rôles & Permissions** : Système de droits différenciés (Administrateur, Responsable, Membre).
+### 👥 Membres & Instances
+- **Annuaire avec Recherche Instantanée** : CRUD complet des professeurs et fonctionnaires avec filtrage temps réel (JS).
+- **Commissions Spécialisées** : Organisation structurée des membres par instances avec gestion des droits d'accès.
+- **Raccourcis Intelligents** : Barre latérale optimisée avec accès direct aux Archives et aux Comptes-rendus.
 
-###  Système de Notifications Omniprésent
-- **Alertes en Temps Réel** : Notifications internes (cloche) pour les invitations, les mises à jour de planning et la publication de rapports.
-- **Suivi des Interactions** : Le responsable est notifié dès qu'un participant accepte ou décline une invitation.
-- **Rappels Automatiques** : Relances par email et notifications internes 24h avant chaque séance.
+### 🔔 Système de Notifications
+- **Alertes Multi-canaux** : Notifications internes (cloche) et emails pour les invitations et mises à jour.
+- **Interaction Sociale** : Confirmation ou excuse des participants avec ajout de messages explicatifs.
+- **Rappels Automatiques** : Relances intelligentes 24h avant chaque séance.
 
-###  Archivage & Rapports
-- **Compte-rendus (PV)** : Téléchargement et archivage des comptes-rendus PDF.
-- **Génération de PV** : Vue dédiée pour l'exportation des décisions officielles.
+### 📄 Gestion des Comptes-rendus (PV)
+- **Centre de Documents** : Page dédiée listant tous les comptes-rendus officiels avec téléchargement direct.
+- **Traçabilité** : Archivage sécurisé des fichiers PDF/Word rattachés aux séances terminées.
 
-##  Stack Technique
-- **Backend** : Laravel 11
-- **Frontend** : Blade Templates & Vanilla CSS (Thème Mixte Odoo-style)
+## 🎨 Design & UX Premium
+L'application a été entièrement refondue pour offrir une expérience utilisateur haut de gamme :
+- **Identité Visuelle** : Logo et Favicon personnalisés, palette de couleurs Indigo moderne.
+- **Tableaux Élite** : Affichage épuré des réunions, effets de survol sur les lignes, et boutons d'action minimalistes.
+- **Responsive & Fluide** : Utilisation d'animations de fondu (Fade-in) et de micro-interactions pour une navigation vivante.
+- **Sidebar Optimisée** : Navigation persistante avec gestion du défilement et raccourcis d'accès rapide.
+
+## 🛠 Stack Technique
+- **Backend** : Laravel 11 (PHP 8.2+)
+- **Frontend** : Blade Templates, Vanilla CSS 3 (Custom Tokens), JavaScript (Real-time filtering)
 - **Base de données** : MySQL
 - **Icônes** : Lucide Icons
-- **Notifications** : Laravel Database Notifications & Mail service
+- **Notifications** : Laravel Database & Mail Notifications
 
-##  Design & UX
-L'application utilise un **Thème Mixte** haut de gamme :
-- **Sidebar Sombre (Elite)** : Pour une navigation focalisée.
-- **Contenu Clair (Odoo Geometry)** : Angles droits (sharp), flat design et bordures nettes pour une lisibilité maximale.
-
-##  Installation
+## ⚙️ Installation
 
 1. Cloner le repository :
 ```bash
-git clone [repository-url]
+git clone https://github.com/rachidoverflow/univ-event-manager.git
 ```
 
 2. Installer les dépendances :
@@ -53,8 +56,9 @@ npm install
 
 3. Configurer l'environnement :
    - Dupliquer `.env.example` en `.env`
-   - Configurer la base de données
-   - Lancer les migrations et seeders :
+   - Configurer `APP_NAME="Meeting Manager"`
+   - Configurer les accès MySQL
+   - Lancer les migrations :
 ```bash
 php artisan migrate --seed
 ```
@@ -65,5 +69,5 @@ php artisan serve
 ```
 
 ---
-**Développé pour la Faculté Polydisciplinaire de Sidi Bennour**
+**Développé pour la Faculté Polydisciplinaire de Sidi Bennour**  
 *Par Rachid ELOUIZI*
